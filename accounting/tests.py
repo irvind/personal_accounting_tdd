@@ -28,6 +28,6 @@ class IndexPageViewTest(BaseTestCase):
 
         self.assertContains(
             response,
-            '<div id="main-item-box">',
+            '<div id="main_item_box">',
             html=True
         )
