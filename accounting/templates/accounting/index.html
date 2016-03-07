@@ -3,6 +3,13 @@
     <title>Учет расходов</title>
     <body>
         <h1>Расходы / Доходы</h1>
+        <form method="POST">
+            <input id="new_item_text" placeholder="Наименование траты" name="name">
+            <input id="new_item_price" placeholder="Сколько" name="price">
+            <button type="submit" id="add_new_item">Добавить</button>
+            {% csrf_token %}
+        </form>
         <div id="main_item_box"></div>
+        <p>Сколько потратили всего: <span id="spent_amount">-100.00</span> руб.</p>
     </body>
 </html>
