@@ -11,7 +11,7 @@ class HomePageTest(unittest.TestCase):
 
     def test_home_page(self):
         self.browser.get('http://localhost:8000')
-        self.assertIn('Расходы / Доходы', self.browser.title)
+        self.assertIn('Учет расходов', self.browser.title)
 
         # Находим сколько мы потратили на данный момент
         self.fail('Finish me')
