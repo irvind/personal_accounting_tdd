@@ -2,8 +2,9 @@ from unittest import skip
 
 from django.test import TestCase
 from django.test.client import Client
-
 from django.core.urlresolvers import reverse
+
+from bs4 import BeautifulSoup
 
 from accounting.models import Expense
 
@@ -18,6 +19,9 @@ class BaseTestCase(TestCase):
             html,
             html=True
         )
+
+    def get_page_soup(self, page_html):
+        return BeautifulSoup(page_html, 'lxml')
 
 
 class IndexPageViewTest(BaseTestCase):
@@ -40,6 +44,35 @@ class IndexPageViewTest(BaseTestCase):
         self.assertContains(
             response,
             '<div id="main_item_box">',
+            html=True
+        )
+
+    def test_correct_exp_sum(self):
+
+        def get_spent_amount():
+            response = self.c.get(reverse('accounting:index'))
+            soup = self.get_page_soup(response.content)
+            spent = float(soup.select('#spent_amount')[0].text)
+            return spent
+
+        self.assertEqual(get_spent_amount(), 0)
+
+        Expense.objects.create(name='none', price=100.50)
+        self.assertEqual(get_spent_amount(), -100.50)
+
+    def test_contain_new_exp_item(self):
+        Expense.objects.create(name='my item', price=100.50)
+
+        response = self.c.get(reverse('accounting:index'))
+        self.assertContains(
+            response,
+            '<span class="item-name">my item</span>',
+            html=True
+        )
+
+        self.assertContains(
+            response,
+            '<span class="item-price">100.50</span>',
             html=True
         )
 
