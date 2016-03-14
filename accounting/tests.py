@@ -94,8 +94,7 @@ class NewExpenseViewTest(BaseTestCase):
         self.assertEqual(expense.name, item_name)
         self.assertEqual(expense.price, item_price)
 
-    @skip
-    def test_cannot_create_if_name_is_missing(self):
+    def test_cannot_create_if_param_is_missing(self):
         resp = self.c.post(
             reverse('accounting:new_expense'),
             {'name': 'some name'}
@@ -103,9 +102,15 @@ class NewExpenseViewTest(BaseTestCase):
 
         self.assertEqual(resp.status_code, 400)
 
+        resp = self.c.post(
+            reverse('accounting:new_expense'),
+            {'price': '100.05'}
+        )
+
+        self.assertEqual(resp.status_code, 400)
+
 
 class IndexNewExpenseIntegrationTest(BaseTestCase):
-    @skip
     def test_index_page_accepts_new_items(self):
         item_name, item_price = 'Бананы', 70
 

@@ -27,7 +27,10 @@ def new_expense_view(request):
     try:
         price = float(price)
     except (TypeError, ValueError):
-        pass
+        return HttpResponse(status=400)
+
+    if not name or not price:
+        return HttpResponse(status=400)
 
     if name and isinstance(price, float):
         exp = Expense.objects.create(
