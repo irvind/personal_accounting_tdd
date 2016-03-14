@@ -36,7 +36,7 @@ class HomePageTest(LiveServerTestCase):
             all_table.append((item_name, item_price, item_date))
 
         self.assertIn(
-            (name, price),
+            (name, price, date),
             all_table
         )
 

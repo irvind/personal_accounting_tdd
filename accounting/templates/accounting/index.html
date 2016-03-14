@@ -10,12 +10,13 @@
             {% csrf_token %}
         </form>
         <div id="main_item_box">
-        	{% for item in exp_items %}
-        		<div class="item">
-        			<span class="item-name">{{ item.name }}</span>
-        			<span class="item-price">{{ item.price }}</span>
-        		</div>
-        	{% endfor %}
+            {% for item in exp_items %}
+                <div class="item">
+                    <span class="item-name">{{ item.name }}</span>
+                    <span class="item-price">{{ item.price }}</span>
+                    <span class="item-date">{{ item.created|date:"d.m.Y" }}</span>
+                </div>
+             {% endfor %}
         </div>
         <p>Сколько потратили всего: <span id="spent_amount">{{ exp_sum }}</span> руб.</p>
     </body>

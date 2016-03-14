@@ -1,3 +1,4 @@
+from datetime import date as date_cls
 from unittest import skip
 
 from django.test import TestCase
@@ -61,7 +62,7 @@ class IndexPageViewTest(BaseTestCase):
         self.assertEqual(get_spent_amount(), -100.50)
 
     def test_contain_new_exp_item(self):
-        Expense.objects.create(name='my item', price=100.50)
+        exp = Expense.objects.create(name='my item', price=100.50)
 
         response = self.c.get(reverse('accounting:index'))
         self.assertContains(
@@ -73,6 +74,14 @@ class IndexPageViewTest(BaseTestCase):
         self.assertContains(
             response,
             '<span class="item-price">100.50</span>',
+            html=True
+        )
+
+        self.assertContains(
+            response,
+            '<span class="item-date">%s</span>' % (
+                exp.created.strftime('%d.%m.%Y')
+            ), 
             html=True
         )
 
@@ -93,6 +102,18 @@ class NewExpenseViewTest(BaseTestCase):
 
         self.assertEqual(expense.name, item_name)
         self.assertEqual(expense.price, item_price)
+
+    def test_new_date_is_today(self):
+        self.c.post(
+            reverse('accounting:new_expense'),
+            {'name': 'test', 'price': 5}
+        )
+
+        exp = Expense.objects.first()
+        self.assertEqual(
+            exp.created,
+            date_cls.today()
+        )
 
     def test_cannot_create_if_param_is_missing(self):
         resp = self.c.post(
