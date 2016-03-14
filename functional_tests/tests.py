@@ -16,16 +16,19 @@ class HomePageTest(LiveServerTestCase):
             '#main_item_box > .item'
         )
 
+        all_table = []
         for elem in elements:
-            self.assertEqual(
-                elem.find_element_by_css_selector('span.item-name').text,
-                name
+            item_name = elem.find_element_by_css_selector('span.item-name').text
+            item_price = float(
+                elem.find_element_by_css_selector('span.item-price').text
             )
 
-            self.assertEqual(
-                float(elem.find_element_by_css_selector('span.item-price').text),
-                price
-            )
+            all_table.append((item_name, item_price))
+
+        self.assertIn(
+            (name, price),
+            all_table
+        )
 
     @override_settings(DEBUG=True)
     def test_home_page(self):
@@ -68,7 +71,17 @@ class HomePageTest(LiveServerTestCase):
             expected_spent
         )
 
+        # Вводим еще один элемент
+        self.browser.find_element_by_id('new_item_text').send_keys(
+            'Ненужная штуковина 2'
+        )
+        self.browser.find_element_by_id('new_item_price').send_keys('200')
+        self.browser.find_element_by_id('add_new_item').click()
+
+        self.check_find_exp_item('Ненужная штуковина 2', 200)
+
         # Заходим на сайт позже и расчитываем увидеть наши заполненные данные
         self.browser.get(self.live_server_url)
 
         self.check_find_exp_item('Ненужная штуковина', 100.50)
+        self.check_find_exp_item('Ненужная штуковина 2', 200)
