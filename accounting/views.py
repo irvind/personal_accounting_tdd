@@ -14,6 +14,8 @@ def index_view(request):
         if form.is_valid():
             form.save()
 
+        # todo: redirect
+
     return render(request, 'accounting/index.html', {
         'form': form,
         'exp_sum': Expense.get_total_expense(),
