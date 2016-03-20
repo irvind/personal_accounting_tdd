@@ -1,0 +1,111 @@
+from datetime import date as date_cls
+from unittest import skip
+
+from django.core.urlresolvers import reverse
+
+from .base import BaseTestCase
+
+from accounting.models import Expense
+
+
+class IndexPageViewTest(BaseTestCase):
+    def get_spent_amount(self, response):
+        soup = self.get_page_soup(response)
+        return float(soup.select('#spent_amount')[0].text)
+
+    def test_index_page_uses_index_template(self):
+        response = self.c.get(reverse('accounting:index'))
+        self.assertTemplateUsed(response, 'accounting/index.html')
+
+    def test_returns_zero_spent_amount_on_fresh_db(self):
+        response = self.c.get(reverse('accounting:index'))
+        self.assertEqual(self.get_spent_amount(response), 0)
+
+    def test_returns_expense_sum(self):
+        Expense.objects.create(name='none', price=100.50)
+        Expense.objects.create(name='none 2', price=200.00)
+
+        response = self.c.get(reverse('accounting:index'))
+
+        self.assertEqual(
+            self.get_spent_amount(response),
+            -(100.50 + 200.00)
+        )
+
+    def test_contain_new_exp_item(self):
+        exp = Expense.objects.create(name='my item', price=100.50)
+
+        response = self.c.get(reverse('accounting:index'))
+        self.assertContains(
+            response,
+            '<span class="item-name">my item</span>',
+            html=True
+        )
+
+        self.assertContains(
+            response,
+            '<span class="item-price">100.50</span>',
+            html=True
+        )
+
+        self.assertContains(
+            response,
+            '<span class="item-date">%s</span>' % (
+                exp.created.strftime('%d.%m.%Y')
+            ),
+            html=True
+        )
+
+
+class NewExpenseViewTest(BaseTestCase):
+    def test_creates_new_expense_model(self):
+        item_name, item_price = 'Бананы', 70
+
+        self.c.post(
+            reverse('accounting:new_expense'),
+            {'name': item_name, 'price': item_price}
+        )
+
+        self.assertEqual(Expense.objects.count(), 1)
+        expense = Expense.objects.first()
+
+        self.assertEqual(expense.name, item_name)
+        self.assertEqual(expense.price, item_price)
+
+    def test_redirects_to_index_page(self):
+        item_name, item_price = 'Бананы', 70
+
+        resp = self.c.post(
+            reverse('accounting:new_expense'),
+            {'name': item_name, 'price': item_price}
+        )
+
+        self.assertRedirects(resp, reverse('accounting:index'))
+
+    def test_new_date_is_today(self):
+        self.c.post(
+            reverse('accounting:new_expense'),
+            {'name': 'test', 'price': 5}
+        )
+
+        exp = Expense.objects.first()
+        self.assertEqual(
+            exp.created,
+            date_cls.today()
+        )
+
+    def test_cannot_create_if_price_is_missing(self):
+        resp = self.c.post(
+            reverse('accounting:new_expense'),
+            {'name': 'some name'}
+        )
+
+        self.assertEqual(resp.status_code, 400)
+
+    def test_cannot_create_if_item_name_is_missing(self):
+        resp = self.c.post(
+            reverse('accounting:new_expense'),
+            {'price': '100.05'}
+        )
+
+        self.assertEqual(resp.status_code, 400)
