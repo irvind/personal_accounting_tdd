@@ -2,11 +2,13 @@
 <html>
     <title>Учет расходов</title>
     <body>
-        <h1>Расходы / Доходы</h1>
-        <form method="POST" action="/new-expense">
-            <input id="new_item_text" placeholder="Наименование траты" name="name">
-            <input id="new_item_price" placeholder="Сколько" name="price">
-            <button type="submit" id="add_new_item">Добавить</button>
+        <h1>Расходы</h1>
+        <form method="POST" action="{% url 'accounting:index' %}">
+            {{ form.expense }}
+            {% comment %}
+            <input id="new_expense" placeholder="Наименование траты, сколько, стоимость, когда" 
+                name="name">
+            {% endcomment %}
             {% csrf_token %}
         </form>
         <div id="main_item_box">

@@ -48,7 +48,7 @@ class AccountingPageTest(StaticLiveServerTestCase):
         )
 
     def type_into_new_expense(self, keys):
-        self.browser.find_element_by_id('new_expense').send_keys(keys)
+        self.browser.find_element_by_id('id_expense').send_keys(keys)
 
     def current_spent_amount(self):
         return float(self.browser.find_element_by_id('spent_amount').text)
@@ -64,10 +64,10 @@ class AccountingPageTest(StaticLiveServerTestCase):
         today = date_cls.today()
 
         # Записываем что сегодня потратили
-        new_expense_elem = self.browser.find_element_by_id('new_expense')
+        new_expense_elem = self.browser.find_element_by_id('id_expense')
         self.assertEqual(
             new_expense_elem.get_attribute('placeholder'),
-            'Наименование траты, сколько, стоимость'
+            'Наименование траты, сколько, стоимость, когда'
         )
 
         self.type_into_new_expense('Ненужная штуковина 100.50')
