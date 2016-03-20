@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta, date as date_cls
 
-from django.test import LiveServerTestCase, override_settings
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.test import override_settings
 
 from selenium import webdriver
 
 
-class HomePageTest(LiveServerTestCase):
+class AccountingPageTest(StaticLiveServerTestCase):
     def setUp(self):
         self.browser = webdriver.Firefox()
         self.browser.implicitly_wait(3)
