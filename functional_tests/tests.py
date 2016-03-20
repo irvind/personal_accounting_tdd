@@ -1,7 +1,6 @@
-from datetime import datetime, date as date_cls
+from datetime import datetime, timedelta, date as date_cls
 
 from django.test import LiveServerTestCase, override_settings
-# from django.utils import timezone
 
 from selenium import webdriver
 
@@ -14,7 +13,7 @@ class HomePageTest(LiveServerTestCase):
     def tearDown(self):
         self.browser.quit()
 
-    def check_find_exp_item(self, name, price, date):
+    def check_find_exp_item(self, name, price, date, quantity=None):
 
         def parse_date(date_str):
             return datetime.strptime(date_str, '%d.%m.%Y').date()
@@ -33,12 +32,25 @@ class HomePageTest(LiveServerTestCase):
                 elem.find_element_by_css_selector('span.item-date').text
             )
 
-            all_table.append((item_name, item_price, item_date))
+            if quantity:
+                item_quantity = elem.find_element_by_css_selector(
+                    'span.item-quantity'
+                ).text
+            else:
+                item_quantity = None
+
+            all_table.append((item_name, item_price, item_date, item_quantity))
 
         self.assertIn(
-            (name, price, date),
+            (name, price, date, quantity),
             all_table
         )
+
+    def type_into_new_expense(self, keys):
+        self.browser.find_element_by_id('new_expense').send_keys(keys)
+
+    def current_spent_amount(self):
+        return float(self.browser.find_element_by_id('spent_amount').text)
 
     @override_settings(DEBUG=True)
     def test_home_page(self):
@@ -46,56 +58,90 @@ class HomePageTest(LiveServerTestCase):
         self.assertIn('Учет расходов', self.browser.title)
 
         header = self.browser.find_element_by_tag_name('h1')
-        self.assertIn('Расходы / Доходы', header.text)
+        self.assertEqual('Расходы', header.text)
 
-        # Находим сколько мы потратили на данный момент
-        spent = float(self.browser.find_element_by_id('spent_amount').text)
-
-        # today = timezone.now().date()
         today = date_cls.today()
 
         # Записываем что сегодня потратили
-        new_item_text_elem = self.browser.find_element_by_id('new_item_text')
+        new_expense_elem = self.browser.find_element_by_id('new_expense')
         self.assertEqual(
-            new_item_text_elem.get_attribute('placeholder'),
-            'Наименование траты'
+            new_expense_elem.get_attribute('placeholder'),
+            'Наименование траты, сколько, стоимость'
         )
 
-        new_item_text_elem.send_keys('Ненужная штуковина')
+        self.type_into_new_expense('Ненужная штуковина 100.50')
 
-        new_item_price_elem = self.browser.find_element_by_id('new_item_price')
-        self.assertEqual(
-            new_item_price_elem.get_attribute('placeholder'),
-            'Сколько'
-        )
+        expected_spent = self.current_spent_amount() - 100.50
 
-        new_item_price_elem.send_keys('100.50')
-        expected_spent = spent - 100.50
-
-        # Жмем записать
-        self.browser.find_element_by_id('add_new_item').click()
+        # Жмем Enter
+        self.type_into_new_expense('\n')
 
         # Должны увидеть наш пункт в списке
-        self.check_find_exp_item('Ненужная штуковина', 100.50, today)
+        self.check_find_exp_item('Ненужная штуковина', 100.50, today, 'x1')
 
         # Должны увидеть что расходы увеличились
         self.assertEqual(
-            float(self.browser.find_element_by_id('spent_amount').text),
+            self.current_spent_amount(),
             expected_spent
         )
 
-        # Вводим еще один элемент
-        self.browser.find_element_by_id('new_item_text').send_keys(
-            'Ненужная штуковина 2'
-        )
-        self.browser.find_element_by_id('new_item_price').send_keys('200')
-        self.browser.find_element_by_id('add_new_item').click()
+        # Вводим еще один элемент. 150 руб это за все 3.4кг
+        self.type_into_new_expense('Мясо курицы 150р 3.4кг\n')
+        self.check_find_exp_item('Мясо курицы', 150, today, '3.4 кг')
 
-        # Находим его
-        self.check_find_exp_item('Ненужная штуковина 2', 200, today)
+        expected_spent = self.current_spent_amount() - 150
+        self.assertEqual(
+            self.current_spent_amount(),
+            expected_spent
+        )
+
+        # Вводим еще один элемент. Всего 2 кг, цена одного килограмма - 200 руб.
+        # Расчитываем получить расход в размере 400 руб.
+        self.type_into_new_expense('Мясо свинины 200р/кг 2кг\n')
+        self.check_find_exp_item('Мясо свинины', 400, today, '2 кг')
+
+        expected_spent = self.current_spent_amount() - 400
+        self.assertEqual(
+            self.current_spent_amount(),
+            expected_spent
+        )
+
+        # Вводим еще один элемент. Купили 4 булочки с маком по 20 руб каждая.
+        # Расчитываем получить расход в размере 80 руб. Следует обратить внимание
+        # что 'х' - это русский символ.
+        self.type_into_new_expense('Булочки с маком 20р/х1 х4\n')
+        self.check_find_exp_item('Булочки с маком', 80, today, 'x4')
+
+        expected_spent = self.current_spent_amount() - 80
+        self.assertEqual(
+            self.current_spent_amount(),
+            expected_spent
+        )
+
+        # Вдруг мы вспоминили что вчера потратили еще кое-что. Можем записать дату.
+        # Цена с постфиксом а дата - без.
+        yesterday = today - timedelta(days=1)
+        yesterday_str = '{}.{:2}'.format(yesterday.day, yesterday.month)
+
+        self.type_into_new_expense('Хлеб ржаной 30р {}\n'.format(yesterday_str))
+        self.check_find_exp_item('Хлеб ржаной', 30, yesterday, 'x1')
+
+        # Вспоминили еще раз но уже на позавчера. Дата с постфиксом, а цена - без.
+        double_yesterday = today - timedelta(days=2)
+        double_yesterday_str = '{}.{:2}'.format(
+            double_yesterday.day,
+            double_yesterday.month
+        )
+
+        self.type_into_new_expense('Булка 25.10 {}д\n'.format(double_yesterday_str))
+        self.check_find_exp_item('Булка', 25.1, double_yesterday, 'x1')
 
         # Заходим на сайт позже и расчитываем увидеть наши заполненные данные
         self.browser.get(self.live_server_url)
 
-        self.check_find_exp_item('Ненужная штуковина', 100.50, today)
-        self.check_find_exp_item('Ненужная штуковина 2', 200, today)
+        self.check_find_exp_item('Ненужная штуковина', 100.50, today, 'x1')
+        self.check_find_exp_item('Мясо курицы', 150, today, '3.4 кг')
+        self.check_find_exp_item('Мясо свинины', 400, today, '2 кг')
+        self.check_find_exp_item('Булочки с маком', 80, today, 'x4')
+        self.check_find_exp_item('Хлеб ржаной', 30, yesterday, 'x1')
+        self.check_find_exp_item('Булка', 25.1, double_yesterday, 'x1')
