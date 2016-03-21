@@ -1,3 +1,5 @@
+from unittest import skip
+
 from .base import BaseTestCase
 
 from accounting.forms import ExpenseForm
@@ -14,12 +16,20 @@ class ExpenseFormTest(BaseTestCase):
         self.assertEqual(expense.name, 'Предмет')
         self.assertEqual(expense.price, 10.50)
 
+    def test_empty_expense_is_invalid(self):
+        form = ExpenseForm(data={'expense': ''})
+        self.assertFalse(form.is_valid())
+
+    def test_dont_allow_to_submit_empty_expense(self):
+        form = ExpenseForm(data={'expense': ''})
+        with self.assertRaises(ValueError):
+            form.save()
+
     def test_save_item_with_price_with_postfix(self):
         form = ExpenseForm(data={'expense': 'Предмет1 20.50р'})
         form.save()
 
         expense = Expense.objects.last()
-
         self.assertEqual(expense.name, 'Предмет1')
         self.assertEqual(expense.price, 20.5)
 
@@ -27,6 +37,5 @@ class ExpenseFormTest(BaseTestCase):
         form.save()
 
         expense = Expense.objects.last()
-
         self.assertEqual(expense.name, 'Предмет2')
         self.assertEqual(expense.price, 30.5)
