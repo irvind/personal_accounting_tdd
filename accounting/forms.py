@@ -44,7 +44,6 @@ class ExpenseForm(forms.Form):
         )
 
     def _is_price_token(self, token):
-        print(token)
         match = re.search(r'^\d+(\.\d{1,2})?$', token)
         if not match:
             return False, None
