@@ -13,3 +13,20 @@ class ExpenseFormTest(BaseTestCase):
 
         self.assertEqual(expense.name, 'Предмет')
         self.assertEqual(expense.price, 10.50)
+
+    def test_save_item_with_price_with_postfix(self):
+        form = ExpenseForm(data={'expense': 'Предмет1 20.50р'})
+        form.save()
+
+        expense = Expense.objects.last()
+
+        self.assertEqual(expense.name, 'Предмет1')
+        self.assertEqual(expense.price, 20.5)
+
+        form = ExpenseForm(data={'expense': 'Предмет2 30.50руб'})
+        form.save()
+
+        expense = Expense.objects.last()
+
+        self.assertEqual(expense.name, 'Предмет2')
+        self.assertEqual(expense.price, 30.5)
