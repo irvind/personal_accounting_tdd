@@ -4,6 +4,12 @@ from accounting.expstr import get_expstr_token_type
 
 
 class GetExpTokenTest(BaseTestCase):
+    def test_raises_exception_on_blank_token(self):
+        with self.assertRaises(ValueError):
+            get_expstr_token_type('')
+        with self.assertRaises(ValueError):
+            get_expstr_token_type('  \t\t\n\n ')
+
     def test_can_recognize_name_token(self):
         self.assertEqual(
             get_expstr_token_type('Banana'),
@@ -25,6 +31,10 @@ class GetExpTokenTest(BaseTestCase):
     def test_can_recognize_explicit_date_token(self):
         self.assertEqual(get_expstr_token_type('23.12д'), ('date',))
         self.assertEqual(get_expstr_token_type('1.06д'), ('date',))
+
+    def test_can_recognize_implicit_date_token(self):
+        self.assertEqual(get_expstr_token_type('23.12.2015'), ('date',))
+        self.assertEqual(get_expstr_token_type('10.05.2014'), ('date',))
 
     def test_ambiguity_between_date_and_price_tokens(self):
         self.assertEqual(get_expstr_token_type('23.12'), ('price', 'date',))
@@ -54,6 +64,10 @@ class GetExpTokenTest(BaseTestCase):
 
     def test_can_recognoze_howmuch_quantity(self):
         self.assertEqual(get_expstr_token_type('34кг'), ('quantity',))
+        self.assertEqual(get_expstr_token_type('34кг.'), ('quantity',))
         self.assertEqual(get_expstr_token_type('340.5г'), ('quantity',))
+        self.assertEqual(get_expstr_token_type('340.5г.'), ('quantity',))
         self.assertEqual(get_expstr_token_type('340.50мл'), ('quantity',))
         self.assertEqual(get_expstr_token_type('2.5л'), ('quantity',))
+
+    # todo: errors on explicit
