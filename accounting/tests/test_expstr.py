@@ -1,6 +1,83 @@
+from datetime import date
+
 from .base import BaseTestCase
 
-from accounting.expstr import get_expstr_token_type
+from accounting.expstr import get_expstr_token_type, parse_expstr
+from accounting.exceptions import ExpstrError
+
+
+class ParseExpstrTest(BaseTestCase):
+    def test_simple_case(self):
+        ret = parse_expstr('Предмет 12.10')
+        self.assertEqual(ret['name'], 'Предмет')
+        self.assertEqual(ret['price'], 12.1)
+
+    def test_complex_name(self):
+        ret = parse_expstr('Какой-то предмет 12.10руб.')
+        self.assertEqual(ret['name'], 'Какой-то предмет')
+        self.assertEqual(ret['price'], 12.1)
+
+    def test_price_and_date(self):
+        ret = parse_expstr('Предмет 12.10 12.01.2015')
+        self.assertEqual(ret['price'], 12.1)
+        self.assertEqual(ret['data'], date(2015, 1, 12))
+
+    def test_implicit_date(self):
+        year = date.today().year
+        ret = parse_expstr('Предмет 12.10р 12.01')
+        self.assertEqual(ret['data'], date(year, 1, 12))
+
+    def test_countable_quantity(self):
+        ret = parse_expstr('Предмет 12.10 x4')
+        self.assertEqual(ret['quantity'], ('countable', 4))
+        ret = parse_expstr('Предмет 12.10 4x')
+        self.assertEqual(ret['quantity'], ('countable', 4))
+        ret = parse_expstr('Предмет 12.10 х10')   # rus x
+        self.assertEqual(ret['quantity'], ('countable', 10))
+        ret = parse_expstr('Предмет 12.10 10х')   # rus x
+        self.assertEqual(ret['quantity'], ('countable', 10))
+
+    def test_mesurable_quantity(self):
+        ret = parse_expstr('Предмет 12.10 3.4кг')
+        self.assertEqual(ret['quantity'], ('mesurable', 'кг', 3.4))
+        ret = parse_expstr('Предмет 12.10 345г')
+        self.assertEqual(ret['quantity'], ('mesurable', 'г', 345))
+        ret = parse_expstr('Предмет 12.10 900мл')
+        self.assertEqual(ret['quantity'], ('mesurable', 'мл', 900))
+        ret = parse_expstr('Предмет 12.10 9.5л')
+        self.assertEqual(ret['quantity'], ('mesurable', 'л', 9.5))
+
+    def test_returns_only_passed_data(self):
+        ret = parse_expstr('Предмет 12.10')
+        self.assertIsNone(ret.get('quantity'))
+        self.assertIsNone(ret.get('date'))
+
+    def test_price_not_set_error(self):
+        with self.assertRaises(ExpstrError) as cm:
+            parse_expstr('Предмет 3.4кг')
+
+        self.assertEqual(
+            cm.exception.error_desc['price'],
+            'A price must be specified'
+        )
+
+    def test_invalid_name(self):
+        with self.assertRaises(ExpstrError) as cm:
+            parse_expstr('Предмет 12.40 3.4кг какой-то')
+
+        self.assertEqual(
+            cm.exception.error_desc['name'],
+            'Item name is invalid'
+        )
+
+    def test_ambiguity_between_date_and_price(self):
+        with self.assertRaises(ExpstrError) as cm:
+            parse_expstr('Предмет 12.12 12.12')
+
+        self.assertEqual(
+            cm.exception.error_desc['price'],
+            'Cannot determine price'
+        )
 
 
 class GetExpTokenTest(BaseTestCase):

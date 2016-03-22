@@ -1,0 +1,2 @@
+class ExpstrError(Exception):
+    pass
