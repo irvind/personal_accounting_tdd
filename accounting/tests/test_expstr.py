@@ -1,8 +1,13 @@
+from unittest import skip
+
 from datetime import date
 
 from .base import BaseTestCase
 
-from accounting.expstr import get_expstr_token_type, parse_expstr
+from accounting.expstr import (
+    get_expstr_token_type, parse_expstr, EXPSTR_NO_NAME, EXPSTR_INVALID_NAME,
+    EXPSTR_NO_PRICE
+)
 from accounting.exceptions import ExpstrError
 
 
@@ -48,9 +53,11 @@ class ParseExpstrTest(BaseTestCase):
         self.assertEqual(ret['quantity'], ('mesurable', 'л', 9.5))
 
     def test_returns_only_passed_data(self):
-        ret = parse_expstr('Предмет 12.10')
+        ret = parse_expstr('Предмет 12.10р')
         self.assertIsNone(ret.get('quantity'))
         self.assertIsNone(ret.get('date'))
+        self.assertIsNotNone(ret.get('name'))
+        self.assertIsNotNone(ret.get('price'))
 
     def test_price_not_set_error(self):
         with self.assertRaises(ExpstrError) as cm:
@@ -58,16 +65,31 @@ class ParseExpstrTest(BaseTestCase):
 
         self.assertEqual(
             cm.exception.error_desc['price'],
-            'A price must be specified'
+            EXPSTR_NO_PRICE
+        )
+
+    def test_name_not_set_error(self):
+        with self.assertRaises(ExpstrError) as cm:
+            parse_expstr('3.4кг')
+
+        self.assertEqual(
+            cm.exception.error_desc['name'],
+            EXPSTR_NO_NAME
         )
 
     def test_invalid_name(self):
         with self.assertRaises(ExpstrError) as cm:
             parse_expstr('Предмет 12.40 3.4кг какой-то')
-
         self.assertEqual(
             cm.exception.error_desc['name'],
-            'Item name is invalid'
+            EXPSTR_INVALID_NAME
+        )
+
+        with self.assertRaises(ExpstrError) as cm:
+            parse_expstr('12.40 3.4кг Предмет какой-то')
+        self.assertEqual(
+            cm.exception.error_desc['name'],
+            EXPSTR_INVALID_NAME
         )
 
     def test_ambiguity_between_date_and_price(self):
@@ -77,6 +99,15 @@ class ParseExpstrTest(BaseTestCase):
         self.assertEqual(
             cm.exception.error_desc['price'],
             'Cannot determine price'
+        )
+
+    def test_duplicated_price_raises_error(self):
+        with self.assertRaises(ExpstrError) as cm:
+            parse_expstr('Предмет 12.12р 12.12р')
+
+        self.assertEqual(
+            cm.exception.error_desc['price'],
+            'Duplicated token'
         )
 
 

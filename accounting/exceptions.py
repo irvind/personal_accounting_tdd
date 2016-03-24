@@ -1,2 +1,3 @@
 class ExpstrError(Exception):
-    pass
+    def __init__(self, **kwargs):
+        self.error_desc = kwargs
