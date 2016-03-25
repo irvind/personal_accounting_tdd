@@ -25,12 +25,12 @@ class ParseExpstrTest(BaseTestCase):
     def test_price_and_date(self):
         ret = parse_expstr('Предмет 12.10 12.01.2015')
         self.assertEqual(ret['price'], 12.1)
-        self.assertEqual(ret['data'], date(2015, 1, 12))
+        self.assertEqual(ret['date'], date(2015, 1, 12))
 
     def test_implicit_date(self):
         year = date.today().year
         ret = parse_expstr('Предмет 12.10р 12.01')
-        self.assertEqual(ret['data'], date(year, 1, 12))
+        self.assertEqual(ret['date'], date(year, 1, 12))
 
     def test_countable_quantity(self):
         ret = parse_expstr('Предмет 12.10 x4')
@@ -61,7 +61,7 @@ class ParseExpstrTest(BaseTestCase):
 
     def test_price_not_set_error(self):
         with self.assertRaises(ExpstrError) as cm:
-            parse_expstr('Предмет 3.4кг')
+            parse_expstr('Предмет 3.4кг 10.10.2015')
 
         self.assertEqual(
             cm.exception.error_desc['price'],
@@ -101,13 +101,38 @@ class ParseExpstrTest(BaseTestCase):
             'Cannot determine price'
         )
 
-    def test_duplicated_price_raises_error(self):
+    def test_duplicated_tokens_raises_error(self):
         with self.assertRaises(ExpstrError) as cm:
             parse_expstr('Предмет 12.12р 12.12р')
 
         self.assertEqual(
             cm.exception.error_desc['price'],
-            'Duplicated token'
+            'Duplicated price'
+        )
+
+        with self.assertRaises(ExpstrError) as cm:
+            parse_expstr('Предмет 12.12р 12.12д 12.12.2005')
+
+        self.assertEqual(
+            cm.exception.error_desc['date'],
+            'Duplicated date'
+        )
+
+        with self.assertRaises(ExpstrError) as cm:
+            parse_expstr('Предмет 12.12р 1x 34кг')
+
+        self.assertEqual(
+            cm.exception.error_desc['quantity'],
+            'Duplicated quantity'
+        )
+
+    def test_extra_dateprice_token_error(self):
+        with self.assertRaises(ExpstrError) as cm:
+            parse_expstr('Предмет 12.12р 12.12д 12.10')
+
+        self.assertEqual(
+            cm.exception.error_desc['price'],
+            'Duplicated price'
         )
 
 

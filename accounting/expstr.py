@@ -15,6 +15,8 @@ name_token_regex = r'^.+$'
 EXPSTR_NO_NAME = 'A name must be specified'
 EXPSTR_INVALID_NAME = 'Item name is invalid'
 EXPSTR_NO_PRICE = 'A price must be specified'
+EXPSTR_CANNOT_DETERMINE_PRICE = 'Cannot determine price'
+EXPSTR_DUPLICATE_PRICE = 'Duplicated price'
 
 
 def parse_expstr(exp_string):
@@ -29,27 +31,29 @@ def parse_expstr(exp_string):
             pass
         elif tok_type_len == 1:
             tok_type = tok_type[0]
-            have_tokens.update(tok_type)
+            if tok_type != 'name':
+                have_tokens.update(tok_type)
 
         tokens_with_type.append((token, tok_type))
 
     tokens_with_type = _clean_tokens(tokens_with_type)
 
+    ret = {}
     name_tokens = []
-    price = None
     for token, token_type in tokens_with_type:
         if token_type == 'name':
             name_tokens.append(token)
-        elif token_type == 'price':
-            price = token
+        elif token_type in ('price', 'date', 'quantity'):
+            ret[token_type] = token
 
-    return {
-        'name': ' '.join(name_tokens),
-        'price': price,
-    }
+    ret['name'] = ' '.join(name_tokens)
+
+    return ret
 
 
 def _clean_tokens(tokens_with_type):
+    tokens_with_type = tokens_with_type[:]
+
     name_token_indices = [
         idx for idx, tok in enumerate(tokens_with_type) if tok[1] == 'name'
     ]
@@ -62,6 +66,34 @@ def _clean_tokens(tokens_with_type):
     if name_token_indices != expected_indices:
         raise ExpstrError(name=EXPSTR_INVALID_NAME)
 
+    token_types = [tok_type for _, tok_type in tokens_with_type]
+    have_explicit_price = 'price' in token_types
+    have_explicit_date = 'date' in token_types
+
+    ambig_indices = [
+        idx for idx, tok in enumerate(tokens_with_type)
+        if tok[1] == ('price', 'date')
+    ]
+
+    have_price = have_explicit_price
+    ambig_indices_len = len(ambig_indices)
+    if ambig_indices_len > 0 and have_explicit_date and have_explicit_price:
+        raise ExpstrError(price=EXPSTR_DUPLICATE_PRICE)
+    if ambig_indices_len > 1:
+        msg = (EXPSTR_CANNOT_DETERMINE_PRICE if not have_explicit_price
+               else EXPSTR_DUPLICATE_PRICE)
+        raise ExpstrError(price=msg)
+    elif ambig_indices_len == 1:
+        idx = ambig_indices[0]
+        explicit_type = 'date' if have_explicit_price else 'price'
+        tokens_with_type[idx] = (tokens_with_type[idx][0], explicit_type)
+
+        if explicit_type == 'price':
+            have_price = True
+
+    if not have_price:
+        raise ExpstrError(price=EXPSTR_NO_PRICE)
+
     cleaned = tokens_with_type[0:name_token_indices_len]
 
     for token, token_type in tokens_with_type:
@@ -71,9 +103,11 @@ def _clean_tokens(tokens_with_type):
                 'price'
             ))
 
-    final_token_types = [token_type for token, token_type in cleaned]
-    if 'price' not in final_token_types:
-        raise ExpstrError(price=EXPSTR_NO_PRICE)
+        elif token_type == 'date':
+            cleaned.append((
+                _get_date_value_from_token(token),
+                'date'
+            ))
 
     return cleaned
 
@@ -86,6 +120,32 @@ def _get_price_value_from_token(token):
     match = re.search(number_2dec_token_regex, token)
     if match:
         return float(match.group(0))
+
+    raise ValueError('Invalid token')
+
+
+def _get_date_value_from_token(token):
+    today_year = date.today().year
+    match = re.search(explicit_date_token_regex, token)
+    if match:
+        args = [int(match.group(2)), int(match.group(3))]
+        year_group = match.group(1)
+        year = int(year_group) if year_group is not None else today_year
+        args.insert(0, year)
+        return date(*args)
+
+    match = re.search(implicit_full_date_token_regex, token)
+    if match:
+        return date(
+            int(match.group(3)),
+            int(match.group(2)),
+            int(match.group(1)),
+        )
+
+    match = re.search(number_2dec_token_regex, token)
+    if match:
+        day, month = match.group(0).split('.')
+        return date(today_year, int(month), int(day))
 
     raise ValueError('Invalid token')
 
