@@ -14,6 +14,8 @@ def index_view(request):
         if form.is_valid():
             form.save()
 
+        return redirect('accounting:index')
+
         # todo: redirect
 
     return render(request, 'accounting/index.html', {

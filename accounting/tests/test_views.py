@@ -70,33 +70,29 @@ class IndexPageViewTest(BaseTestCase):
         self.assertEqual(expense.name, 'Бананы')
         self.assertEqual(expense.price, 70)
 
-
-# todo: rewrite
-class NewExpenseViewTest(BaseTestCase):
-    @skip
     def test_redirects_to_index_page(self):
-        item_name, item_price = 'Бананы', 70
-
         resp = self.c.post(
-            reverse('accounting:new_expense'),
-            {'name': item_name, 'price': item_price}
+            reverse('accounting:index'),
+            {'expense': 'Предмет 70руб'}
         )
 
         self.assertRedirects(resp, reverse('accounting:index'))
 
-    @skip
     def test_new_date_is_today(self):
         self.c.post(
-            reverse('accounting:new_expense'),
-            {'name': 'test', 'price': 5}
+            reverse('accounting:index'),
+            {'expense': 'Предмет 70руб'}
         )
 
-        exp = Expense.objects.first()
+        exp = Expense.objects.last()
         self.assertEqual(
             exp.created,
             date_cls.today()
         )
 
+
+# todo: rewrite
+class NewExpenseViewTest(BaseTestCase):
     @skip
     def test_cannot_create_if_price_is_missing(self):
         resp = self.c.post(
