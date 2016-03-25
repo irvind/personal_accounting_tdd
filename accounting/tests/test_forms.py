@@ -39,3 +39,5 @@ class ExpenseFormTest(BaseTestCase):
         expense = Expense.objects.last()
         self.assertEqual(expense.name, 'Предмет2')
         self.assertEqual(expense.price, 30.5)
+
+    # todo: more test for exp item creation
