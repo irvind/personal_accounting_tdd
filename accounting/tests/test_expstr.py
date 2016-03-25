@@ -32,6 +32,14 @@ class ParseExpstrTest(BaseTestCase):
         ret = parse_expstr('Предмет 12.10р 12.01')
         self.assertEqual(ret['date'], date(year, 1, 12))
 
+    def test_parses_full_date_with_following_zero(self):
+        ret = parse_expstr('Предмет 12.10р 02.01.2005')
+        self.assertEqual(ret['date'], date(2005, 1, 2))
+
+        year = date.today().year
+        ret = parse_expstr('Предмет 12.10р 02.01')
+        self.assertEqual(ret['date'], date(year, 1, 2))
+
     def test_countable_quantity(self):
         ret = parse_expstr('Предмет 12.10 x4')
         self.assertEqual(ret['quantity'], ('countable', 4))
@@ -170,6 +178,7 @@ class GetExpTokenTest(BaseTestCase):
     def test_can_recognize_implicit_date_token(self):
         self.assertEqual(get_expstr_token_type('23.12.2015'), ('date',))
         self.assertEqual(get_expstr_token_type('10.05.2014'), ('date',))
+        self.assertEqual(get_expstr_token_type('01.05.2014'), ('date',))
 
     def test_ambiguity_between_date_and_price_tokens(self):
         self.assertEqual(get_expstr_token_type('23.12'), ('price', 'date',))

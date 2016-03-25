@@ -29,8 +29,12 @@ class ExpenseForm(forms.Form):
             raise ValueError('Form is not valid')
 
         expense = self.cleaned_data['expense']
+        create_kwargs = {
+            'name': expense['name'],
+            'price': expense['price'],
+        }
 
-        return Expense.objects.create(
-            name=expense['name'],
-            price=expense['price'],
-        )
+        if 'date' in expense:
+            create_kwargs['date'] = expense['date']
+
+        return Expense.objects.create(**create_kwargs)

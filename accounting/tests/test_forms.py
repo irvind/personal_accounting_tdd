@@ -1,4 +1,5 @@
 from unittest import skip
+from datetime import date
 
 from .base import BaseTestCase
 
@@ -7,9 +8,13 @@ from accounting.models import Expense
 
 
 class ExpenseFormTest(BaseTestCase):
-    def test_simple_expense_create(self):
-        form = ExpenseForm(data={'expense': 'Предмет 10.50'})
+    def _create_and_save_exp_form(self, exp_str):
+        form = ExpenseForm(data={'expense': exp_str})
         form.save()
+        return form
+
+    def test_simple_expense_create(self):
+        self._create_and_save_exp_form('Предмет 10.50')
 
         expense = Expense.objects.first()
 
@@ -26,18 +31,25 @@ class ExpenseFormTest(BaseTestCase):
             form.save()
 
     def test_save_item_with_price_with_postfix(self):
-        form = ExpenseForm(data={'expense': 'Предмет1 20.50р'})
-        form.save()
-
+        self._create_and_save_exp_form('Предмет1 20.50р')
         expense = Expense.objects.last()
         self.assertEqual(expense.name, 'Предмет1')
         self.assertEqual(expense.price, 20.5)
 
-        form = ExpenseForm(data={'expense': 'Предмет2 30.50руб'})
-        form.save()
-
+        self._create_and_save_exp_form('Предмет2 30.50руб')
         expense = Expense.objects.last()
         self.assertEqual(expense.name, 'Предмет2')
         self.assertEqual(expense.price, 30.5)
+
+    def test_save_item_with_date(self):
+        year = date.today().year
+
+        self._create_and_save_exp_form('Предмет1 20.50р 1.03')
+        expense = Expense.objects.last()
+        self.assertEqual(expense.date, date(year, 3, 1))
+
+        self._create_and_save_exp_form('Предмет1 20.50р 1.03.2014')
+        expense = Expense.objects.last()
+        self.assertEqual(expense.date, date(2014, 3, 1))
 
     # todo: more test for exp item creation
