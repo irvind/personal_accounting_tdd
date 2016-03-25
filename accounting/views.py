@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from django.core.urlresolvers import reverse
 
-
 from .models import Expense
 from .forms import ExpenseForm
 
@@ -15,8 +14,6 @@ def index_view(request):
             form.save()
 
         return redirect('accounting:index')
-
-        # todo: redirect
 
     return render(request, 'accounting/index.html', {
         'form': form,
