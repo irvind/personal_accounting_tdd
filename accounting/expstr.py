@@ -96,18 +96,13 @@ def _clean_tokens(tokens_with_type):
 
     cleaned = tokens_with_type[0:name_token_indices_len]
 
-    for token, token_type in tokens_with_type:
-        if token_type == 'price' or 'price' in token_type:
-            cleaned.append((
-                _get_price_value_from_token(token),
-                'price'
-            ))
-
-        elif token_type == 'date':
-            cleaned.append((
-                _get_date_value_from_token(token),
-                'date'
-            ))
+    _retrieval_map = {
+        'price': _get_price_value_from_token,
+        'date': _get_date_value_from_token
+    }
+    for token, token_type in tokens_with_type[name_token_indices_len:]:
+        cleaned_token = _retrieval_map[token_type](token)
+        cleaned.append((cleaned_token, token_type))
 
     return cleaned
 
