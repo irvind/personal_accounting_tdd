@@ -8,7 +8,10 @@ from .exceptions import ExpstrError
 explicit_price_token_regex = r'^(\d+(?:\.\d{1,2})?)(?:р|руб\.?)$'
 explicit_date_token_regex = r'^(\d|1\d|2\d|3[01]).([01]\d)(?:.(\d{4}))?д$'
 implicit_full_date_token_regex = r'(\d|1\d|2\d|3[01]).([01]\d).(\d{4})$'
-quantity_token_regex = r'([xXхХ]\d+|\d+[xXхХ]|\d+(?:\.\d+)?(кг|г|л|мл)\.?)'
+quantity_token_regex = (
+    r'(?:[xXхХ](\d+)|(\d+)[xXхХ]|'
+    r'(\d+(?:\.\d+)?)(кг|г|л|мл)\.?)'
+)
 number_2dec_token_regex = r'^\d+(\.\d{1,2})?$'
 name_token_regex = r'^.+$'
 
@@ -98,7 +101,8 @@ def _clean_tokens(tokens_with_type):
 
     _retrieval_map = {
         'price': _get_price_value_from_token,
-        'date': _get_date_value_from_token
+        'date': _get_date_value_from_token,
+        'quantity': _get_quantity_value_from_token,
     }
     for token, token_type in tokens_with_type[name_token_indices_len:]:
         cleaned_token = _retrieval_map[token_type](token)
@@ -143,6 +147,22 @@ def _get_date_value_from_token(token):
         return date(today_year, int(month), int(day))
 
     raise ValueError('Invalid token')
+
+
+def _get_quantity_value_from_token(token):
+    match = re.search(quantity_token_regex, token)
+    if not match:
+        raise ValueError('Invalid token')
+
+    groups = match.groups()
+    if groups[2] is not None:
+        how_much, unit = groups[2], groups[3]
+        return ('mesurable', unit, float(how_much))
+    else:
+        how_many = int(
+            groups[0] if groups[0] is not None else groups[1]
+        )
+        return ('countable', how_many)
 
 
 def get_expstr_token_type(token, not_type=None):
