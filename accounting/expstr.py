@@ -188,4 +188,4 @@ def get_expstr_token_type(token, not_type=None):
     elif re.search(name_token_regex, token):
         return ('name',)
 
-    return None
+    raise ValueError('Invalid token')
