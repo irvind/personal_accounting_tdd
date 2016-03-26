@@ -23,8 +23,8 @@ class IndexPageViewTest(BaseTestCase):
 
     def test_returns_expense_sum(self):
         # todo: take quantity into account
-        Expense.objects.create(name='none', price=100.50)
-        Expense.objects.create(name='none 2', price=200.00)
+        Expense.objects.create_expense(name='none', price=100.50)
+        Expense.objects.create_expense(name='none 2', price=200.00)
 
         response = self.c.get(reverse('accounting:index'))
 
@@ -35,7 +35,12 @@ class IndexPageViewTest(BaseTestCase):
 
     def test_contain_new_exp_item(self):
         # todo: take quantity into account
-        exp = Expense.objects.create(name='my item', price=100.50)
+        exp = Expense.objects.create_expense(
+            name='my item',
+            price=100.50,
+            unit='x',
+            amount=5
+        )
 
         response = self.c.get(reverse('accounting:index'))
         self.assertContains(
@@ -55,6 +60,37 @@ class IndexPageViewTest(BaseTestCase):
             '<span class="item-date">%s</span>' % (
                 exp.created.strftime('%d.%m.%Y')
             ),
+            html=True
+        )
+        self.assertContains(
+            response,
+            '<span class="item-quantity">x5</span>',
+            html=True
+        )
+
+    def test_contains_measurable_items(self):
+        Expense.objects.create_expense(
+            name='my item 1',
+            price=100,
+            unit='kg',
+            amount=3.4
+        )
+        Expense.objects.create_expense(
+            name='my item 2',
+            price=200,
+            unit='g',
+            amount=350
+        )
+
+        response = self.c.get(reverse('accounting:index'))
+        self.assertContains(
+            response,
+            '<span class="item-quantity">350 г</span>',
+            html=True
+        )
+        self.assertContains(
+            response,
+            '<span class="item-quantity">3.4 кг</span>',
             html=True
         )
 

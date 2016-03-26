@@ -16,8 +16,8 @@
                 <div class="item">
                     <span class="item-name">{{ item.name }}</span>
                     <span class="item-price">{{ item.price }}</span>
-                    <span class="item-date">{{ item.created|date:"d.m.Y" }}</span>
-                    <span class="item-quantity">x1</span>
+                    <span class="item-date">{{ item.date|date:"d.m.Y" }}</span>
+                    <span class="item-quantity">{{ item.quantity_repr }}</span>
                 </div>
              {% endfor %}
         </div>

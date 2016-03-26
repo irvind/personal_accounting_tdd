@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect
-from django.core.urlresolvers import reverse
 
 from .models import Expense
 from .forms import ExpenseForm
