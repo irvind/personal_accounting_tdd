@@ -87,54 +87,36 @@ class AccountingPageTest(StaticLiveServerTestCase):
         )
 
         # Вводим еще один элемент. 150 руб это за все 3.4кг
+        expected_spent = self.current_spent_amount() - 150
         self.type_into_new_expense('Мясо курицы 150р 3.4кг\n')
         self.check_find_exp_item('Мясо курицы', 150, today, '3.4 кг')
 
-        expected_spent = self.current_spent_amount() - 150
         self.assertEqual(
             self.current_spent_amount(),
             expected_spent
         )
 
-        # Вводим еще один элемент. Всего 2 кг, цена одного килограмма - 200 руб.
-        # Расчитываем получить расход в размере 400 руб.
-        self.type_into_new_expense('Мясо свинины 200р/кг 2кг\n')
-        self.check_find_exp_item('Мясо свинины', 400, today, '2 кг')
-
-        expected_spent = self.current_spent_amount() - 400
-        self.assertEqual(
-            self.current_spent_amount(),
-            expected_spent
-        )
-
-        # Вводим еще один элемент. Купили 4 булочки с маком по 20 руб каждая.
-        # Расчитываем получить расход в размере 80 руб. Следует обратить внимание
-        # что 'х' - это русский символ.
-        self.type_into_new_expense('Булочки с маком 20р/х1 х4\n')
-        self.check_find_exp_item('Булочки с маком', 80, today, 'x4')
-
-        expected_spent = self.current_spent_amount() - 80
-        self.assertEqual(
-            self.current_spent_amount(),
-            expected_spent
-        )
-
-        # Вдруг мы вспоминили что вчера потратили еще кое-что. Можем записать дату.
-        # Цена с постфиксом а дата - без.
+        # Вдруг мы вспоминили что вчера потратили еще кое-что. Можем записать
+        # дату. Цена с постфиксом а дата - без.
         yesterday = today - timedelta(days=1)
-        yesterday_str = '{}.{:2}'.format(yesterday.day, yesterday.month)
+        yesterday_str = '{}.{:02}'.format(yesterday.day, yesterday.month)
 
-        self.type_into_new_expense('Хлеб ржаной 30р {}\n'.format(yesterday_str))
+        self.type_into_new_expense('Хлеб ржаной 30р {}\n'.format(
+            yesterday_str
+        ))
         self.check_find_exp_item('Хлеб ржаной', 30, yesterday, 'x1')
 
-        # Вспоминили еще раз но уже на позавчера. Дата с постфиксом, а цена - без.
+        # Вспоминили еще раз но уже на позавчера. Дата с постфиксом,
+        # а цена - без.
         double_yesterday = today - timedelta(days=2)
-        double_yesterday_str = '{}.{:2}'.format(
+        double_yesterday_str = '{}.{:02}'.format(
             double_yesterday.day,
             double_yesterday.month
         )
 
-        self.type_into_new_expense('Булка 25.10 {}д\n'.format(double_yesterday_str))
+        self.type_into_new_expense('Булка 25.10 {}д\n'.format(
+            double_yesterday_str
+        ))
         self.check_find_exp_item('Булка', 25.1, double_yesterday, 'x1')
 
         # Заходим на сайт позже и расчитываем увидеть наши заполненные данные
@@ -142,7 +124,20 @@ class AccountingPageTest(StaticLiveServerTestCase):
 
         self.check_find_exp_item('Ненужная штуковина', 100.50, today, 'x1')
         self.check_find_exp_item('Мясо курицы', 150, today, '3.4 кг')
-        self.check_find_exp_item('Мясо свинины', 400, today, '2 кг')
-        self.check_find_exp_item('Булочки с маком', 80, today, 'x4')
         self.check_find_exp_item('Хлеб ржаной', 30, yesterday, 'x1')
         self.check_find_exp_item('Булка', 25.1, double_yesterday, 'x1')
+
+    def test_creating_items_with_with_price_for_unit(self):
+        self.browser.get(self.live_server_url)
+
+        today = date_cls.today()
+
+        # Всего 2 кг, цена одного килограмма - 200 руб. Расчитываем получить
+        # расход в размере 400 руб.
+        self.type_into_new_expense('Мясо свинины 200р/кг 2кг\n')
+        self.check_find_exp_item('Мясо свинины', 400, today, '2 кг')
+
+        # Купили 4 булочки с маком по 20 руб каждая. Расчитываем получить
+        # расход в размере 80 руб. 'х' - это русский символ.
+        self.type_into_new_expense('Булочки с маком 20р/х1 х4\n')
+        self.check_find_exp_item('Булочки с маком', 80, today, 'x4')
