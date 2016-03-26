@@ -57,13 +57,13 @@ class ParseExpstrTest(BaseTestCase):
 
     def test_mesurable_quantity(self):
         ret = parse_expstr('Предмет 12.10 3.4кг')
-        self.assertEqual(ret['quantity'], ('mesurable', 'кг', 3.4))
+        self.assertEqual(ret['quantity'], ('measurable', 'kg', 3.4))
         ret = parse_expstr('Предмет 12.10 345г')
-        self.assertEqual(ret['quantity'], ('mesurable', 'г', 345))
+        self.assertEqual(ret['quantity'], ('measurable', 'g', 345))
         ret = parse_expstr('Предмет 12.10 900мл')
-        self.assertEqual(ret['quantity'], ('mesurable', 'мл', 900))
+        self.assertEqual(ret['quantity'], ('measurable', 'ml', 900))
         ret = parse_expstr('Предмет 12.10 9.5л')
-        self.assertEqual(ret['quantity'], ('mesurable', 'л', 9.5))
+        self.assertEqual(ret['quantity'], ('measurable', 'l', 9.5))
 
     def test_returns_only_passed_data(self):
         ret = parse_expstr('Предмет 12.10р')

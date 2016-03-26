@@ -1,5 +1,5 @@
 from unittest import skip
-from datetime import date
+from datetime import date, timedelta
 
 from .base import BaseTestCase
 
@@ -52,4 +52,27 @@ class ExpenseFormTest(BaseTestCase):
         expense = Expense.objects.last()
         self.assertEqual(expense.date, date(2014, 3, 1))
 
-    # todo: more test for exp item creation
+        yesterday = date.today() - timedelta(days=1)
+        self._create_and_save_exp_form('Хлеб ржаной 30р {}.{:02}'.format(
+            yesterday.day, yesterday.month
+        ))
+        expense = Expense.objects.last()
+        self.assertEqual(expense.date, yesterday)
+
+    def test_save_countable_item(self):
+        self._create_and_save_exp_form('Предмет1 100р 4x')
+        expense = Expense.objects.last()
+        self.assertEqual(expense.amount, 4)
+
+        self._create_and_save_exp_form('Предмет2 100р х5')
+        expense = Expense.objects.last()
+        self.assertEqual(expense.amount, 5)
+
+    def test_save_measurable_item(self):
+        self._create_and_save_exp_form('Предмет1 1000р 14.5кг')
+        expense = Expense.objects.last()
+        self.assertEqual(expense.amount, 14.5)
+
+        self._create_and_save_exp_form('Предмет2 1000р 700г')
+        expense = Expense.objects.last()
+        self.assertEqual(expense.amount, 700)

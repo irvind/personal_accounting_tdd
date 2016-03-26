@@ -36,5 +36,17 @@ class ExpenseForm(forms.Form):
 
         if 'date' in expense:
             create_kwargs['date'] = expense['date']
+        if 'quantity' in expense:
+            quant = expense['quantity']
+            if quant[0] == 'countable':
+                create_kwargs.update({
+                    'unit': 'x',
+                    'amount': quant[1]
+                })
+            elif quant[0] == 'measurable':
+                create_kwargs.update({
+                    'unit': quant[1],
+                    'amount': quant[2]
+                })
 
-        return Expense.objects.create(**create_kwargs)
+        return Expense.objects.create_expense(**create_kwargs)

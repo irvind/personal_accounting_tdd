@@ -3,6 +3,7 @@ import re
 from datetime import date
 
 from .exceptions import ExpstrError
+from .models import Expense
 
 
 explicit_price_token_regex = r'^(\d+(?:\.\d{1,2})?)(?:р|руб\.?)$'
@@ -157,7 +158,11 @@ def _get_quantity_value_from_token(token):
     groups = match.groups()
     if groups[2] is not None:
         how_much, unit = groups[2], groups[3]
-        return ('mesurable', unit, float(how_much))
+        return (
+            'measurable',
+            Expense.rus_unit_type_to_eng(unit),
+            float(how_much)
+        )
     else:
         how_many = int(
             groups[0] if groups[0] is not None else groups[1]
