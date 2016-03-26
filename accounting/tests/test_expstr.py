@@ -40,6 +40,11 @@ class ParseExpstrTest(BaseTestCase):
         ret = parse_expstr('Предмет 12.10р 02.01')
         self.assertEqual(ret['date'], date(year, 1, 2))
 
+    def test_parses_explicit_date_without_year(self):
+        year = date.today().year
+        ret = parse_expstr('Булка 25.10 25.10д')
+        self.assertEqual(ret['date'], date(year, 10, 25))
+
     def test_countable_quantity(self):
         ret = parse_expstr('Предмет 12.10 x4')
         self.assertEqual(ret['quantity'], ('countable', 4))

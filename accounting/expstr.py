@@ -127,8 +127,8 @@ def _get_date_value_from_token(token):
     today_year = date.today().year
     match = re.search(explicit_date_token_regex, token)
     if match:
-        args = [int(match.group(2)), int(match.group(3))]
-        year_group = match.group(1)
+        args = [int(match.group(2)), int(match.group(1))]
+        year_group = match.group(3)
         year = int(year_group) if year_group is not None else today_year
         args.insert(0, year)
         return date(*args)
