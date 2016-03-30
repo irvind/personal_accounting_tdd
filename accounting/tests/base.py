@@ -16,4 +16,4 @@ class BaseTestCase(TestCase):
         )
 
     def get_page_soup(self, response):
-        return BeautifulSoup(response.content, 'lxml')
+        return BeautifulSoup(response.content, 'html.parser')
