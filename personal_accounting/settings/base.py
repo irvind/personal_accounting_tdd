@@ -10,22 +10,41 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
+import envs
+
+if envs.is_production():
+    from personal_accounting.settings.production_vars import *
+
+try:
+    from personal_accounting.settings.local_vars import *
+except ImportError as e:
+    pass
+
+try:
+    _ = locals()['DB_NAME']
+except KeyError:
+    raise Exception('Database credential must be specified!')
+
+
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+))
+
+
+# '3)q2$tuuo64zpiuidlde1m85bt69zako)-!=62+45dxtf5&9a8'
+SECRET_KEY = envs.get_secret_key()
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '3)q2$tuuo64zpiuidlde1m85bt69zako)-!=62+45dxtf5&9a8'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
 ALLOWED_HOSTS = []
+
+if 'DOMAIN_NAME' in locals():
+    ALLOWED_HOSTS.append(DOMAIN_NAME)
 
 
 # Application definition
@@ -73,15 +92,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'personal_accounting.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/1.9/ref/settings/#databases
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
 
 
 # Password validation
@@ -106,7 +134,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'Europe/Moscow'
 
@@ -121,3 +149,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
+
+if 'STATIC_ROOT_PATH' in locals():
+    if not os.path.isabs(STATIC_ROOT_PATH):
+        STATIC_ROOT_PATH = os.path.join(BASE_DIR, STATIC_ROOT_PATH)
+
+    STATIC_ROOT = STATIC_ROOT_PATH
