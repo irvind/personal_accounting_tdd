@@ -2,13 +2,13 @@
 import os
 import sys
 
-from envs import detect_environment_module
+from envs import get_environment_settings_module
 
 
 if __name__ == '__main__':
     os.environ.setdefault(
         'DJANGO_SETTINGS_MODULE',
-        detect_environment_module()
+        get_environment_settings_module()
     )
 
     from django.core.management import execute_from_command_line

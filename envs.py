@@ -1,5 +1,5 @@
 import os
-import platform
+# import platform
 
 
 def is_production():
@@ -8,24 +8,28 @@ def is_production():
     return False
 
 
-def detect_environment_module():
-    prod_host_file = None
-    try:
-        prod_host_file_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            'prod_host'
-        )
-        prod_host_file = open(prod_host_file_path, 'r')
-        prod_host_name = prod_host_file.read().strip()
+def get_environment_settings_module():
+    # prod_host_file = None
+    # try:
+    #     prod_host_file_path = os.path.join(
+    #         os.path.dirname(os.path.abspath(__file__)),
+    #         'prod_host'
+    #     )
+    #     prod_host_file = open(prod_host_file_path, 'r')
+    #     prod_host_name = prod_host_file.read().strip()
 
-        if prod_host_name == platform.node():
-            return 'personal_accounting.settings.production'
-        return 'personal_accounting.settings.development'
-    except FileNotFoundError:
-        return 'personal_accounting.settings.development'
-    finally:
-        if prod_host_file is not None:
-            prod_host_file.close()
+    #     if prod_host_name == platform.node():
+    #         return 'personal_accounting.settings.production'
+    #     return 'personal_accounting.settings.development'
+    # except FileNotFoundError:
+    #     return 'personal_accounting.settings.development'
+    # finally:
+    #     if prod_host_file is not None:
+    #         prod_host_file.close()
+
+    if 'ACCOUNTING_PRODUCTION_ENV' in os.environ:
+        return 'personal_accounting.settings.production'
+    return 'personal_accounting.settings.development'
 
 
 def get_secret_key():
