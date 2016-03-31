@@ -1,0 +1,30 @@
+---
+- name: install required .deb packages
+  apt: pkg={{item}} state=present
+  with_items:
+    - nginx
+    - git
+    - python3
+    - python3-pip
+    - postgresql
+    - libpq-dev
+    - python-psycopg2
+  become: yes
+
+- name: make sure virtualenv is installed
+  pip: name=virtualenv executable=pip3
+  become: yes
+
+- include: globalenv.yml env_var=ACCOUNTING_SECRET_KEY var_val={{secret_key}}
+- include: globalenv.yml env_var=ACCOUNTING_DB_PASSWORD var_val={{db_password}}
+- include: globalenv.yml env_var=ACCOUNTING_PRODUCTION_ENV var_val="1"
+
+- name: Source the environment file
+  shell: . /etc/environment
+  changed_when: false
+
+- name: clone or pull project repo
+  git: repo={{repo_url}} dest={{repo_path}}
+
+- name: create virtualenv and install python requirements
+  pip: virtualenv={{venv_path}} requirements={{requirements_path}}

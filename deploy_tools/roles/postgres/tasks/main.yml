@@ -1,0 +1,22 @@
+---
+- name: ensure postgres service is running
+  service: name=postgresql state=started enabled=True
+  become: yes
+
+- block:
+    - name: ensure database is created
+      postgresql_db: name={{dbname}}
+
+    - name: ensure user has all priveleges to database
+      postgresql_user: 
+        db={{dbname}}
+        name={{dbuser}}
+        password={{ansible_env.ACCOUNTING_DB_PASSWORD}}
+        priv=ALL
+
+    - name: ensure user does not have unnecessary priveleges
+      postgresql_user: name={{dbuser}} role_attr_flags=NOSUPERUSER,NOCREATEDB
+
+  become: yes
+  become_user: postgres
+

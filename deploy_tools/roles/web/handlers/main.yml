@@ -1,0 +1,8 @@
+---
+- name: restart nginx
+  service: name=nginx state=restarted
+  become: yes
+
+- name: restart gunicorn
+  service: name=gunicorn-{{site_domain}} state=restarted
+  become: yes

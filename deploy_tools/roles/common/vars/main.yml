@@ -1,0 +1,9 @@
+---
+secret_key: "{{ lookup('password', '/tmp/anspwds/secret_key length=50') }}"
+db_password: "{{ lookup('password', '/tmp/anspwds/db_password length=50') }}"
+
+repo_url: "https://github.com/irvind/personal_accounting_tdd.git"
+base_path: "/home/irvind/sites/accounting.irvind.me"
+repo_path: "{{base_path}}/accounting"
+venv_path: "{{base_path}}/venv"
+requirements_path: "{{repo_path}}/requirements.txt"

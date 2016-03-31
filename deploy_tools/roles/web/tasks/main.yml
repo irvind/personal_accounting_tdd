@@ -1,0 +1,28 @@
+---
+- block:
+    - name: add nginx config to sites-available
+      template: src=nginx.conf
+                 dest=/etc/nginx/sites-available/{{site_domain}}
+      notify:
+          - restart nginx
+
+    - name: add nginx symlink to sites-enabled
+      file: src=/etc/nginx/sites-available/{{site_domain}}
+            dest=/etc/nginx/sites-enabled/{{site_domain}} state=link
+      notify:
+          - restart nginx
+
+    - name: write gunicorn init script
+      template: src=gunicorn-upstart.conf
+                dest=/etc/init/gunicorn-{{site_domain}}.conf
+      notify:
+          - restart gunicorn
+
+    - name: ensure nginx service is running
+      service: name=nginx state=started enabled=True
+
+
+    - name: make sure gunicorn is running
+      service: name=gunicorn-{{site_domain}} state=running
+
+  become: yes

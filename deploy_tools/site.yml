@@ -1,0 +1,7 @@
+---
+- hosts: myserver
+  roles:
+    - common
+    - postgres
+    - django
+    - web

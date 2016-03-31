@@ -1,0 +1,4 @@
+---
+base_path: "/home/irvind/sites/accounting.irvind.me"
+app_path: "{{base_path}}/accounting"
+venv_path: "{{base_path}}/venv"

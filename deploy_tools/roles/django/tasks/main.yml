@@ -1,0 +1,6 @@
+---
+- name: run migrations
+  django_manage: command=migrate app_path={{app_path}} virtualenv={{venv_path}}
+
+- name: collect static files
+  django_manage: command=collectstatic app_path={{app_path}} virtualenv={{venv_path}}

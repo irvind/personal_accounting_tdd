@@ -1,0 +1,13 @@
+---
+- name: test for env var {{env_var}}
+  shell: grep "^{{env_var}}" /etc/environment
+  register: grep_test
+  ignore_errors: yes
+  changed_when: grep_test.stdout == ""
+
+- name: add {{env_var}} env variable to global vars
+  lineinfile:
+    dest=/etc/environment
+    line="{{env_var}}=\"{{var_val}}\""
+  become: true
+  when: grep_test.stdout == ""
