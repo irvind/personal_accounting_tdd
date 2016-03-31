@@ -3,3 +3,4 @@ __pycache__
 /prod_host
 local_vars.py
 *.pyc
+*.retry
