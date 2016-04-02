@@ -15,14 +15,16 @@
     - name: write gunicorn init script
       template: src=gunicorn-upstart.conf
                 dest=/etc/init/gunicorn-{{site_domain}}.conf
-      notify:
-          - restart gunicorn
+      # notify:
+      #     - restart gunicorn
 
     - name: ensure nginx service is running
       service: name=nginx state=started enabled=True
 
-
     - name: make sure gunicorn is running
       service: name=gunicorn-{{site_domain}} state=running
+
+    - name: restart gunicorn
+      service: name=gunicorn-{{site_domain}} state=restarted
 
   become: yes
