@@ -149,3 +149,9 @@ if 'STATIC_ROOT_PATH' in locals():
     STATIC_ROOT = STATIC_ROOT_PATH
 
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'general_static')]
+
+# Use SQLite when running tests
+import sys
+
+if 'test' in sys.argv or 'test_coverage' in sys.argv: 
+    DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
