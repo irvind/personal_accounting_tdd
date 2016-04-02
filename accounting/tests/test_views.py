@@ -11,7 +11,7 @@ from accounting.models import Expense
 class IndexPageViewTest(BaseTestCase):
     def get_spent_amount(self, response):
         soup = self.get_page_soup(response)
-        return float(soup.select('#spent_amount')[0].text)
+        return float(soup.select('#spent_amount')[0].text.replace(',', '.'))
 
     def test_index_page_uses_index_template(self):
         response = self.c.get(reverse('accounting:index'))
@@ -45,26 +45,26 @@ class IndexPageViewTest(BaseTestCase):
         response = self.c.get(reverse('accounting:index'))
         self.assertContains(
             response,
-            '<span class="item-name">my item</span>',
+            '<td class="item-name">my item</td>',
             html=True
         )
 
         self.assertContains(
             response,
-            '<span class="item-price">100.50</span>',
+            '<td class="item-price">100,50 руб.</td>',
             html=True
         )
 
         self.assertContains(
             response,
-            '<span class="item-date">%s</span>' % (
+            '<td class="item-date">%s</td>' % (
                 exp.created.strftime('%d.%m.%Y')
             ),
             html=True
         )
         self.assertContains(
             response,
-            '<span class="item-quantity">x5</span>',
+            '<td class="item-quantity">x5</td>',
             html=True
         )
 
@@ -85,12 +85,12 @@ class IndexPageViewTest(BaseTestCase):
         response = self.c.get(reverse('accounting:index'))
         self.assertContains(
             response,
-            '<span class="item-quantity">350 г</span>',
+            '<td class="item-quantity">350 г</td>',
             html=True
         )
         self.assertContains(
             response,
-            '<span class="item-quantity">3.4 кг</span>',
+            '<td class="item-quantity">3.4 кг</td>',
             html=True
         )
 
