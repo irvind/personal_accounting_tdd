@@ -1,26 +1,45 @@
 <!DOCTYPE html>
 <html>
-    <title>Учет расходов</title>
-    <body>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Учет расходов</title>
+  <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/static/accounting/base.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="row" id="title_row">
+      <div class="col-md-6 col-md-offset-3 text-center">
         <h1>Расходы</h1>
-        <form method="POST" action="{% url 'accounting:index' %}">
-            {{ form.expense }}
-            {% comment %}
-            <input id="new_expense" placeholder="Наименование траты, сколько, стоимость, когда" 
-                name="name">
-            {% endcomment %}
-            {% csrf_token %}
+        <form method="POST" action="{% url 'accounting:index' %}" class="exp-form">
+          {{ form.expense }}
+          {% csrf_token %}
         </form>
-        <div id="main_item_box">
-            {% for item in exp_items %}
-                <div class="item">
-                    <span class="item-name">{{ item.name }}</span>
-                    <span class="item-price">{{ item.price }}</span>
-                    <span class="item-date">{{ item.date|date:"d.m.Y" }}</span>
-                    <span class="item-quantity">{{ item.quantity_repr }}</span>
-                </div>
-             {% endfor %}
-        </div>
-        <p>Сколько потратили всего: <span id="spent_amount">{{ exp_sum }}</span> руб.</p>
-    </body>
+      </div>
+    </div>
+    <div class="row" id="main_item_box">
+      <div class="col-md-10 col-md-offset-1">
+        <table class="table table-striped" id="exp_table">
+          <tbody>
+          {% for item in exp_items %}
+            <tr>
+              <td class="item-name">{{ item.name }}</td>
+              <td class="item-price">{{ item.price }} руб.</td>
+              <td class="item-date">{{ item.date|date:"d.m.Y" }}</td>
+              <td class="item-quantity">{{ item.quantity_repr }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p>Сколько потратили всего: <strong><span id="spent_amount">{{ exp_sum }}</span> руб.</strong></p>
+  </div>
+ 
+  <script src="/static/js/jquery.min.js"></script>
+  <script src="/static/js/bootstrap.min.js"></script>
+</body>
 </html>

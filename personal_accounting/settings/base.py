@@ -147,3 +147,5 @@ if 'STATIC_ROOT_PATH' in locals():
         STATIC_ROOT_PATH = os.path.join(BASE_DIR, STATIC_ROOT_PATH)
 
     STATIC_ROOT = STATIC_ROOT_PATH
+
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'general_static')]

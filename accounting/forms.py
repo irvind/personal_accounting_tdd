@@ -10,7 +10,8 @@ from .exceptions import ExpstrError
 class ExpenseForm(forms.Form):
     expense = forms.CharField(
         widget=forms.TextInput(attrs={
-            'placeholder': 'Наименование траты, сколько, стоимость, когда'
+            'placeholder': 'Наименование траты, сколько, стоимость, когда',
+            'class': 'form-control input-lg'
         })
     )
 

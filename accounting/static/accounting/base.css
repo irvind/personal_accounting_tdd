@@ -1,0 +1,17 @@
+.exp-form {}
+
+#title_row {
+  margin-bottom: 20px;
+}
+
+#exp_table .item-price {
+  font-weight: bold;
+}
+
+#exp_table .item-price, #exp_table .item-date {
+  width: 200px;
+}
+
+#exp_table .item-quantity {
+  width: 85px;
+}
